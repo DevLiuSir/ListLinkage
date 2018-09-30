@@ -8,12 +8,15 @@
 
 import UIKit
 
-//右侧collectionView的自定义分区头
+/// 右侧collectionView的自定义分区头
 class CollectionViewHeader: UICollectionReusableView {
     
-    //分区头文本标签
+    /// 分区头文本标签
     var titleLabel = UILabel()
     
+    /// 初始化
+    ///
+    /// - Parameter frame: 尺寸位置
     override init(frame: CGRect) {
         super.init(frame: frame)
         

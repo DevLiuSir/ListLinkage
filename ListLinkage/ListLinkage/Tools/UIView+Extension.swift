@@ -28,7 +28,7 @@ let isIphone6 = screenH == 667 ? true : false
 /// iphone 6\7\8P
 let isIphone6P = screenH == 736 ? true : false
 
-/// iphone X
+/// iphone X\XS/XS Max
 let isIphoneX = screenH >= 812 ? true : false
 
 /// 状态栏的高度

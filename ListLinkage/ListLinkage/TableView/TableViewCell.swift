@@ -8,12 +8,13 @@
 
 import UIKit
 
-//左侧表格的自定义单元格
+/// 左侧表格的自定义单元格
 class TableViewCell: UITableViewCell {
     
-    //标题文本标签
+    /// 标题文本标签
     var titleLabel = UILabel()
-    //左侧装饰标签
+    
+    /// 左侧装饰标签
     var leftTag = UIView()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -64,10 +65,11 @@ class TableViewCell: UITableViewCell {
         context.strokePath()
     }
     
-    //设置选中样式
+    // 设置选中样式
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        contentView.backgroundColor = selected ? UIColor(254, 254, 254) : UIColor(246, 246, 246)
+        
+        contentView.backgroundColor = selected ? UIColor.white : UIColor(white: 0, alpha: 0.1)
         isHighlighted = selected
         titleLabel.isHighlighted = selected
         leftTag.isHidden = !selected

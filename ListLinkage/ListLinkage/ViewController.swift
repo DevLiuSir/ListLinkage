@@ -11,10 +11,14 @@ import UIKit
 
 /// 表格宽度
 private let tableViewWidth: CGFloat = 80
+
 /// 间距
 private let margin: CGFloat = 2
 
-/// 单元格重用标识符
+/// 单元格的个数
+private let itemCout: CGFloat = 3
+
+/* 单元格重用标识符 */
 private let tableCell = "tableCell"
 private let collectionViewCell = "collectionViewCell"
 private let collectionViewHeader = "collectionViewHeader"
@@ -22,7 +26,7 @@ private let collectionViewHeader = "collectionViewHeader"
 
 class ViewController: UIViewController {
     
-    // MARK: - Attribute (属性)
+    // MARK: - Attribute
     
     /// 左侧tableView数据
     var tableViewData = [String]()
@@ -38,7 +42,7 @@ class ViewController: UIViewController {
     
     // MARK: - Lazy loading
     
-    //左侧tableView
+    /// 左侧tableView
     private lazy var tableView : UITableView = {
         let tableView = UITableView()
         tableView.frame = CGRect(x: 0, y: 0, width: tableViewWidth, height: screenH)
@@ -51,21 +55,21 @@ class ViewController: UIViewController {
         return tableView
     }()
     
-    //右侧collectionView的布局
+    /// 右侧collectionView的布局
     private lazy var flowlayout : UICollectionViewFlowLayout = {
         let flowlayout = UICollectionViewFlowLayout()
         flowlayout.scrollDirection = .vertical
         flowlayout.minimumLineSpacing = margin
         flowlayout.minimumInteritemSpacing = margin
-        flowlayout.sectionHeadersPinToVisibleBounds = true          // 分组头部是否悬停
-        let itemWidth = (screenW - tableViewWidth - margin * 4) / 3
+//        flowlayout.sectionHeadersPinToVisibleBounds = true          // 分组头部是否悬停
+        let itemWidth = (screenW - tableViewWidth - margin * 4) / itemCout
         flowlayout.itemSize = CGSize(width: itemWidth, height: itemWidth + 30)
         return flowlayout
     }()
     
-    //右侧collectionView
+    /// 右侧collectionView
     private lazy var collectionView : UICollectionView = {
-        let collFrame = CGRect(x: tableViewWidth + 2, y: 2 + navigationH, width: screenW - 80 - 4, height: screenH - 64 - 4)
+        let collFrame = CGRect(x: tableViewWidth + margin, y: navigationH + margin, width: screenW - tableViewWidth - margin * 2, height: screenH - navigationH - margin * 2)
         let collectionView = UICollectionView(frame: collFrame, collectionViewLayout: flowlayout)
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
@@ -80,7 +84,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         configUI()
-        confData()
+        configData()
     }
 }
 
@@ -96,12 +100,12 @@ extension ViewController {
     }
     
     /// 配置数据
-    private func confData() {
+    private func configData() {
         // 初始化左侧表格数据
         for i in 1 ..< 15 {
             self.tableViewData.append("分类\(i)")
         }
-        // 初始化右侧表格数据
+        // 初始化右侧collectionView数据
         for _ in tableViewData {
             var models = [CollectionViewModel]()
             for i in 1 ..< 6 {
@@ -116,9 +120,12 @@ extension ViewController {
     /// - Parameters:
     ///   - section: 组
     ///   - animated: 是否动画
-    func collectionViewScrollToTop(section: Int, animated: Bool) {
+    private func collectionViewScrollToTop(section: Int, animated: Bool) {
+        
         let headerRect = collectionViewHeaderFrame(section: section)
+        
         let topOfHeader = CGPoint(x: 0, y: headerRect.origin.y - collectionView.contentInset.top)
+        
         collectionView.setContentOffset(topOfHeader, animated: animated)
     }
     
@@ -126,14 +133,37 @@ extension ViewController {
     ///
     /// - Parameter section: 分区
     /// - Returns: 位置
-    func collectionViewHeaderFrame(section: Int) -> CGRect {
+    private func collectionViewHeaderFrame(section: Int) -> CGRect {
         let indexPath = IndexPath(item: 0, section: section)
-        let attributes = collectionView.collectionViewLayout.layoutAttributesForSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, at: indexPath)
+        let attributes = collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionHeader, at: indexPath)
+        
         guard let frameForFirstCell = attributes?.frame else {
             return .zero
         }
-        return frameForFirstCell;
+        return frameForFirstCell
     }
+    
+/*
+    private func collectionViewHeaderFrame(section: Int) {
+        
+        let indexPath = IndexPath(item: 0, section: section)
+        if let attributes = collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionHeader, at: indexPath) {
+            var offsetY = attributes.frame.origin.y - collectionView.contentInset.top
+            if #available(iOS 11.0, *) {
+                offsetY -= collectionView.safeAreaInsets.top
+            }
+            collectionView.setContentOffset(CGPoint(x: 0, y: offsetY), animated: true) // or animated: false
+        }
+    }
+*/
+    
+    /// 当拖动 CollectionView 的时候，处理左侧表格，自动选中该分区对应的分类
+    ///
+    /// - Parameter index: 下标
+    private func selectRow(index : Int) {
+        tableView.selectRow(at: IndexPath(row: index, section: 0), animated: true, scrollPosition: .middle)
+    }
+    
 }
 
 // MARK: - UITableViewDataSource
@@ -160,8 +190,8 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     
-        // 右侧collection自动滚动到对应的分区
-        collectionViewScrollToTop(section: indexPath.row, animated: true)
+        // 解决点击 TableView 后 CollectionView 的 Header 遮挡问题。 右侧collection自动滚动到对应的分区
+        collectionViewScrollToTop(section: indexPath.item, animated: true)
         
         // 左侧tableView将该单元格滚动到顶部
         tableView.scrollToRow(at: IndexPath(row: indexPath.row, section: 0), at: .top, animated: true)
@@ -200,9 +230,11 @@ extension ViewController: UICollectionViewDelegate {
     
     // 分区头即将要显示时调用
     func collectionView(_ collectionView: UICollectionView, willDisplaySupplementaryView view: UICollectionReusableView, forElementKind elementKind: String, at indexPath: IndexPath) {
+        
         //如果是由用户手动滑动屏幕造成的向上滚动，那么左侧表格自动选中该分区对应的分类
         if !collectionViewIsScrollDown && (collectionView.isDragging || collectionView.isDecelerating) {
-            tableView.selectRow(at: IndexPath(row: indexPath.section, section: 0), animated: true, scrollPosition: .top)
+            
+            selectRow(index: indexPath.section)
         }
     }
     
@@ -211,7 +243,8 @@ extension ViewController: UICollectionViewDelegate {
         
         //如果是由用户手动滑动屏幕造成的向下滚动，那么左侧表格自动选中该分区对应的下一个分区的分类
         if collectionViewIsScrollDown && (collectionView.isDragging || collectionView.isDecelerating) {
-            tableView.selectRow(at: IndexPath(row: indexPath.section + 1, section: 0), animated: true, scrollPosition: .top)
+            
+            selectRow(index: indexPath.section + 1)
         }
     }
     
