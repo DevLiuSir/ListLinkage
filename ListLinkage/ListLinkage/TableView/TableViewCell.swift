@@ -45,7 +45,7 @@ class TableViewCell: UITableViewCell {
     override func draw(_ rect: CGRect) {
         // 获取绘图上下文
         guard let context = UIGraphicsGetCurrentContext() else { return }
-        /// 线宽
+        /// 线宽（1像素）
         let lineWidth = 1 / UIScreen.main.scale
         /// 线偏移量
         let lineAdjustOffset = 1 / UIScreen.main.scale / 2
